@@ -2,210 +2,29 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<!-- Security policy (audit M4, 29 Oct 2026): scripts only from this site, cdnjs (with integrity hashes) and the one inline script below (by hash);
-     data only to Supabase, PDOK (place search) and cdnjs (the PDF worker, hash-checked). Change the hash if that inline script changes. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com 'sha256-ozy0IB51w1sQI+Wx9QpmZi6vAKCUMLzzd7o9zR0nt7E='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' https: data: blob:; connect-src 'self' https://sldfjyrpopypzbmhvbkq.supabase.co https://api.pdok.nl https://cdnjs.cloudflare.com; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b62c4">
-<title>Kamernet Live</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="app.css?v=21">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Kamernet Live has moved</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 32px 16px; font: 17px/1.5 system-ui, sans-serif; background: Canvas; color: CanvasText; }
+  main { max-width: 32rem; margin: 0 auto; }
+  a { font-weight: 600; }
+</style>
 </head>
 <body>
-<!-- Layout: four tabs (Find, To do, Places, More) with a bottom tab bar, a floating Tell Claude button,
-     and one full-screen listing page that holds everything about a single place (status, messages, deal). -->
-
-<section class="lock" id="lock" aria-label="Passcode" hidden>
-  <div class="lockbox">
-    <h1>Kamernet Live</h1>
-    <p id="gatemsg">Private tool. Enter the passcode to open it.</p>
-    <input type="password" id="pass" autocomplete="current-password" placeholder="Passcode" aria-label="Passcode">
-    <button class="btn big" id="passbtn" type="button">Unlock</button>
-  </div>
-</section>
-
-<div id="app" hidden>
-  <!-- FIND: every listing, filters, list or map, select several to act on them -->
-  <main class="view" id="v-find" aria-label="Find">
-    <header class="top">
-      <div><h1>Find</h1><p class="sub" id="sub">Loading…</p></div>
-      <button class="btn ghost" id="selbtn" type="button">Select several</button>
-    </header>
-    <div class="locrow">
-      <div class="locbox"><input type="search" id="locq" placeholder="Where? City, area, street or postcode" aria-label="Location" autocomplete="off" spellcheck="false"><div class="sugg" id="locsugg" role="listbox" hidden></div></div>
-      <select id="locr" aria-label="Distance"></select>
-    </div>
-    <div class="scrollchips" id="cities" role="group" aria-label="Quick pick a place"></div>
-    <div class="toolrow">
-      <button class="btn ghost" id="filtbtn" type="button">Filters</button>
-      <select id="sort" aria-label="Sort">
-        <option value="per_person">Price</option>
-        <option value="first_seen_at">Date found</option>
-        <option value="raw->>publishDate">Date posted</option>
-        <option value="size_m2">Size</option>
-        <option value="available_from">Available from</option>
-        <option value="status">Status</option>
-      </select>
-      <button class="btn ghost" id="sortdir" type="button">↑</button>
-      <div class="seg" role="group" aria-label="View"><button type="button" id="viewList" aria-pressed="true">List</button><button type="button" id="viewMap" aria-pressed="false">Map</button></div>
-    </div>
-    <div class="activef" id="activef"></div>
-    <div class="bulkrow" id="bulkrow"><span>Many at once:</span><button class="btn ghost small" id="bkpick" type="button">Pick good matches</button><button class="btn ghost small" id="bkai" type="button">AI summaries for new ones</button><button class="btn ghost small" id="bksel" type="button">Select by hand</button></div>
-    <p class="count" id="count"></p>
-    <div class="mapwrap" id="mapwrap" hidden>
-      <div id="map" aria-label="Map of the listings"></div>
-      <button class="btn" id="maparea" type="button" hidden>Search this area</button>
-      <div class="mapnote" id="mapnote"></div>
-    </div>
-    <div class="list" id="list"></div>
-    <div class="center"><button class="btn ghost" id="more" type="button" hidden>Show more</button></div>
-  </main>
-
-  <!-- MY LEADS: places you're in touch with, grouped by what happens next -->
-  <main class="view" id="v-leads" aria-label="Places" hidden>
-    <header class="top"><div><h1>Places</h1><p class="sub" id="leadsub"></p></div><button class="btn ghost" id="lselbtn" type="button">Select several</button></header>
-    <div id="leads"></div>
-  </main>
-
-  <!-- INBOX: messages waiting to be sent, landlord messages, and messages that need a listing -->
-  <main class="view" id="v-inbox" aria-label="To do" hidden>
-    <header class="top"><div><h1>To do</h1><p class="sub" id="inboxsub"></p></div></header>
-    <div id="inboxv"></div>
-  </main>
-
-  <!-- MORE: facts about you, alerts and health, add a place, lock -->
-  <main class="view" id="v-more" aria-label="More" hidden>
-    <header class="top"><div><h1>More</h1><p class="sub">Settings and things that run for you</p></div></header>
-    <section class="panel">
-      <h2>Is everything running?</h2>
-      <div class="health" id="health">Loading…</div>
-      <div class="btnrow"><button class="btn" id="pushOn" type="button">Turn on alerts on this phone</button><button class="btn ghost" id="pushTest" type="button" hidden>Send a test alert to this phone</button><button class="btn ghost" id="pushOff" type="button" hidden>Turn off alerts on this phone</button></div>
-      <p class="why" id="pushInfo">Alerts are per phone. Turn them on once on each phone (in Chrome) and choose Allow.</p>
-    </section>
-    <section class="panel" id="sitesPanel">
-      <h2>Sites Kamernet Live reads</h2>
-      <p class="why">Each site has a "recipe": how to read its pages. Plain code reads with it, without AI. When a site changes and the recipe stops working, the AI learns a new one, which is only used after it passes the checks. If that fails, you get an alert.</p>
-      <div id="sites" class="sites">Loading…</div>
-      <details class="sitelog"><summary>What happened recently</summary><div id="sitelog"></div></details>
-    </section>
-    <section class="panel">
-      <h2>People</h2>
-      <p class="why">Who might move in with you. For each place you pick who comes along; Claude's messages then name only them, with their intro. Other details go in only when a landlord or the ad asks.</p>
-      <div id="pplList" class="melist">Loading…</div>
-      <button class="btn ghost" id="pplAdd" type="button">+ Add a person</button>
-    </section>
-    <section class="panel">
-      <h2>About you</h2>
-      <p class="why">Your standing answers. Every message Claude writes uses them, so landlords' questions are answered without asking you again. "Writing rules" are style rules for every message. Changes save by themselves.</p>
-      <div id="meList" class="melist">Loading…</div>
-      <button class="btn ghost" id="meAdd" type="button">Add a fact</button>
-    </section>
-    <section class="panel" id="freePanel">
-      <h2>When you're free for viewings</h2>
-      <p class="why">Write it in your own words, for example "weekday evenings after 18:00 and all of Saturday". When you pick a viewing time, the calendar shows those times in green.</p>
-      <textarea id="freeTxt" rows="2" aria-label="When you're free" placeholder="Weekday evenings, Saturday all day"></textarea>
-      <div class="btnrow"><button class="btn ghost" id="freeRead" type="button">Fill in my week</button></div>
-      <div id="freeGrid"></div>
-    </section>
-    <section class="panel">
-      <h2>A place from somewhere else</h2>
-      <p class="why">Found something on Facebook, through a friend or by email? Add it and it works like any other listing: messages, viewing, deal and signing.</p>
-      <button class="btn ghost" id="addbtn" type="button">Add a place</button>
-    </section>
-    <section class="panel">
-      <h2>Lock</h2>
-      <p class="why">Locks Kamernet Live on this device. You'll need the passcode again.</p>
-      <button class="btn ghost danger" id="lockbtn" type="button">Lock this device</button>
-    </section>
-  </main>
-
-  <!-- selecting several listings in Find: what you can do with them -->
-  <div class="selbar" id="selbar" hidden>
-    <div class="selinfo"><b id="selcount">Tap listings to select them</b><span id="selhint"></span></div>
-    <div class="btnrow">
-      <button class="btn" id="selwrite" type="button" disabled>Write messages</button>
-      <button class="btn ghost" id="selai" type="button">AI summary</button>
-      <button class="btn ghost" id="selpick" type="button">Pick good matches</button>
-      <button class="btn ghost" id="selcancel" type="button">Done</button>
-    </div>
-  </div>
-
-  <!-- selecting several places in Places: replies and follow-ups for many at once -->
-  <div class="selbar" id="lselbar" hidden>
-    <div class="selinfo"><b id="lselcount">Tap places to select them</b><span id="lselhint"></span></div>
-    <div class="btnrow">
-      <button class="btn" id="lselreply" type="button" disabled>Write replies</button>
-      <button class="btn ghost" id="lselfollow" type="button" disabled>Write follow-ups</button>
-      <button class="btn ghost" id="lselcancel" type="button">Done</button>
-    </div>
-  </div>
-
-  <button class="fab" id="askbtn" type="button" aria-label="Tell Claude">Tell Claude</button>
-
-  <nav class="tabs" aria-label="Sections">
-    <button type="button" data-tab="find" aria-current="page"><span class="ti" aria-hidden="true">⌕</span>Find</button>
-    <button type="button" data-tab="inbox"><span class="ti" aria-hidden="true">✓</span>To do<span class="tb" id="tb-inbox" hidden></span></button>
-    <button type="button" data-tab="leads"><span class="ti" aria-hidden="true">★</span>Places<span class="tb" id="tb-leads" hidden></span></button>
-    <button type="button" data-tab="more"><span class="ti" aria-hidden="true">⋯</span>More<span class="tb warnb" id="tb-more" hidden>!</span></button>
-  </nav>
-</div>
-
-<!-- One listing: everything about it on one page -->
-<dialog id="lp" class="page" aria-labelledby="lpTitle"><div class="pagein">
-  <header class="pagetop"><button class="btn ghost" id="lpBack" type="button">‹ Back</button><h2 id="lpTitle"></h2></header>
-  <div id="lpBody"></div>
-</div></dialog>
-
-<!-- Filters -->
-<dialog id="filtDlg" class="sheet" aria-labelledby="filtTitle"><div class="sheetin">
-  <header class="sheettop"><h2 id="filtTitle">Filters</h2><button class="btn ghost" id="filtReset" type="button">Reset all</button></header>
-  <div id="filtBody"></div>
-  <footer class="sheetbot"><button class="btn big" id="filtDone" type="button">Show listings</button></footer>
-</div></dialog>
-
-<!-- Tell Claude -->
-<dialog id="askDlg" class="sheet" aria-labelledby="askTitle"><div class="sheetin">
-  <header class="sheettop"><h2 id="askTitle">Tell Claude</h2><button class="btn ghost" id="askClose" type="button">Close</button></header>
-  <p class="why" id="askAbout"></p>
-  <textarea id="askText" placeholder="What changed, or what should I do? For example: Oscar called, the viewing moved to Thursday 18:00. Or: this listing is a scam. Or: ask Max if Saturday works instead."></textarea>
-  <button class="btn big" id="askSend" type="button">Send to Claude</button>
-  <p class="why">Claude answers here within seconds, even with your PC off. It can update statuses, viewing times and facts, answer questions about your listings, make AI summaries and write messages. If you ask it to send (“send it”, “ask Max if Saturday works”), that counts as your OK and it sends just those. Messages with a [YOUR ANSWER] gap wait in To do. Changes to this site itself are made in a Claude chat.</p>
-  <div id="askList" class="asklist"></div>
-</div></dialog>
-
-<!-- Add a place -->
-<dialog id="addDlg" class="sheet" aria-labelledby="addTitle"><div class="sheetin">
-  <header class="sheettop"><h2 id="addTitle">Add a place</h2><button class="btn ghost" id="addClose" type="button">Close</button></header>
-  <div class="grid2">
-    <label>Street *<input id="apStreet" autocomplete="off"></label>
-    <label>City *<input id="apCity" autocomplete="off"></label>
-    <label>Rent per month (€, total) *<input id="apPrice" inputmode="decimal"></label>
-    <label>Type<select id="apKind"><option value="apartment">Apartment</option><option value="room">Room</option><option value="studio">Studio</option></select></label>
-    <label>People allowed<input id="apPeople" inputmode="numeric" placeholder="2"></label>
-    <label>Size (m²)<input id="apSize" inputmode="decimal"></label>
-    <label>Available from<input id="apFrom" type="date"></label>
-    <label>Where things stand<select id="apStage"><option value="replied">We're in contact</option><option value="applied">I wrote to them</option><option value="booked">Viewing booked</option><option value="viewed">I've seen it</option><option value="offer">They offered it to me</option></select></label>
-    <label class="span2">Link to the ad (optional)<input id="apUrl" inputmode="url" placeholder="https://"></label>
-  </div>
-  <h3 class="lbl">Landlord (optional; needed for Send for me and WhatsApp)</h3>
-  <div class="grid2"><label>Name<input id="apCName"></label><label>Email<input id="apCEmail" inputmode="email"></label><label>Phone (WhatsApp)<input id="apCPhone" inputmode="tel"></label></div>
-  <label class="lbl">Notes (what the ad or the landlord said)<textarea id="apNotes" rows="3"></textarea></label>
-  <button class="btn big" id="apSave" type="button">Add it</button>
-  <p class="why err" id="apInfo"></p>
-</div></dialog>
-
-<!-- Are you sure? -->
-<dialog id="cfDlg" class="confirm" aria-labelledby="cfTitle"><div class="cfin">
-  <h2 id="cfTitle"></h2><div id="cfBody"></div>
-  <div class="btnrow end"><button class="btn ghost" id="cfNo" type="button">Cancel</button><button class="btn" id="cfYes" type="button">OK</button></div>
-</div></dialog>
-
-<div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastText"></span><button class="linkbtn" id="toastUndo" type="button" hidden>Undo</button></div>
-
-<dialog id="calDlg" class="caldlg" aria-label="Pick a date"></dialog>
-<script src="app.js?v=21"></script>
-<script>// if the app's code didn't load (bad connection), say so instead of showing a blank page (no inline handlers: the CSP allows only this script, by its hash)
-if (typeof showTab !== "function"){ document.body.innerHTML = '<div style="padding:40px 20px;font:16px system-ui;text-align:center">Kamernet Live did not load properly.<br><br><button id="reloadBtn" type="button" style="font:inherit;padding:10px 18px;border-radius:10px">Try again</button></div>'; document.getElementById("reloadBtn").addEventListener("click", () => location.reload()); }</script>
+<main>
+  <h1>Kamernet Live has moved</h1>
+  <p>Its new address is <a id="go" href="https://asa-kamernet.github.io/">asa-kamernet.github.io</a>. Opening it now…</p>
+</main>
+<script>
+// Moved 29 Oct 2026 to its own address, so other pages on asakhang.github.io can't read its storage.
+// This page wipes what the old address saved (the passcode and view state) and forwards, keeping the #part
+// (e.g. #l=123 from an alert). sw.js stays here so alerts on phones that turned them on here keep working.
+try { ["kn_pass", "kn_state", "kn_todo_tab"].forEach((k) => localStorage.removeItem(k)); } catch {}
+const to = "https://asa-kamernet.github.io/" + location.hash;
+document.getElementById("go").href = to;
+location.replace(to);
+</script>
 </body>
 </html>

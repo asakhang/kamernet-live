@@ -1,3 +1,4 @@
-# Kamernet Live
+# Kamernet Live: old address
 
-Personal viewer for Kamernet listings. One static page (index.html) that reads a Supabase database. Listing data is public Kamernet information. Distill and application statuses need a private passcode.
+Kamernet Live moved to https://asa-kamernet.github.io/ on 29 Oct 2026 (repo asa-kamernet/asa-kamernet.github.io).
+This page only clears what the old address stored and forwards there. sw.js stays so existing phone alerts keep working.
